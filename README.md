@@ -29,6 +29,7 @@ The current prototype checkpoint is published separately from the source tree:
 
 - GitHub Release: [v0.1.0 prototype checkpoint package](https://github.com/reshuibuduo/TMCRA-TokenGraph-LLM/releases/tag/v0.1.0-prototype)
 - Model asset: [`token_graph_llm_model_package_20260530.zip`](https://github.com/reshuibuduo/TMCRA-TokenGraph-LLM/releases/download/v0.1.0-prototype/token_graph_llm_model_package_20260530.zip)
+- Hugging Face model repo: [2009YU/TMCRA-TokenGraph-LLM](https://huggingface.co/2009YU/TMCRA-TokenGraph-LLM)
 
 The source repository intentionally excludes `.pt` checkpoints and raw corpora. The release package includes the checkpoint, tokenizer, model card, manifest, checksums, and example outputs.
 
