@@ -1,0 +1,20 @@
+{"id":"paraphrase_001","category":"paraphrase","prompt":"Make this sentence sound more formal: this movie is really good to watch.","expected_behavior":"formal rewrite without copying a training template"}
+{"id":"paraphrase_002","category":"paraphrase","prompt":"Rewrite this casually: The weather today is exceptionally pleasant.","expected_behavior":"casual rewrite"}
+{"id":"paraphrase_003","category":"paraphrase","prompt":"Say the same idea in simpler words: The device requires additional power before it can operate.","expected_behavior":"simple paraphrase"}
+{"id":"paraphrase_004","category":"paraphrase","prompt":"Turn this into a polite request: send me the document now.","expected_behavior":"polite request"}
+{"id":"composition_001","category":"novel_composition","prompt":"Write two short sentences about a student finding a silver notebook under a tree.","expected_behavior":"coherent new short text"}
+{"id":"composition_002","category":"novel_composition","prompt":"Give three reasons why a small robot might need a map.","expected_behavior":"three plausible reasons"}
+{"id":"composition_003","category":"novel_composition","prompt":"Write a one-sentence explanation of why plants need sunlight.","expected_behavior":"basic explanation"}
+{"id":"composition_004","category":"novel_composition","prompt":"Write a polite two-sentence email asking to reschedule a meeting.","expected_behavior":"email-like output"}
+{"id":"substitution_001","category":"variable_substitution","prompt":"A green lantern is on the wooden desk. What color is the lantern?","expected_behavior":"answer green, not a memorized color"}
+{"id":"substitution_002","category":"variable_substitution","prompt":"Mira packed seven pencils and two erasers. How many pencils did Mira pack?","expected_behavior":"answer seven"}
+{"id":"substitution_003","category":"variable_substitution","prompt":"The kitten slept in a blue basket beside the sofa. Where did the kitten sleep?","expected_behavior":"answer blue basket"}
+{"id":"substitution_004","category":"variable_substitution","prompt":"A chef added lemon, basil, and rice to the soup. Name one ingredient in the soup.","expected_behavior":"one listed ingredient"}
+{"id":"freegen_001","category":"no_context_generation","prompt":"Write one sentence about a rainy morning.","expected_behavior":"fluent sentence"}
+{"id":"freegen_002","category":"no_context_generation","prompt":"List two things people bring to school.","expected_behavior":"two plausible school items"}
+{"id":"freegen_003","category":"no_context_generation","prompt":"Write a short sentence about a quiet library.","expected_behavior":"fluent sentence"}
+{"id":"freegen_004","category":"no_context_generation","prompt":"Explain in one sentence why people drink water.","expected_behavior":"basic explanation"}
+{"id":"unseen_continuation_001","category":"unseen_continuation","prompt":"Continue the story: Lena opened the old box and found a tiny glass key inside.","expected_behavior":"coherent continuation"}
+{"id":"unseen_continuation_002","category":"unseen_continuation","prompt":"Continue the passage: The wind pushed the small boat away from the dock.","expected_behavior":"coherent continuation"}
+{"id":"unseen_continuation_003","category":"unseen_continuation","prompt":"Continue the story: Omar heard music coming from the empty classroom.","expected_behavior":"coherent continuation"}
+{"id":"unseen_continuation_004","category":"unseen_continuation","prompt":"Continue the passage: After the lights went out, the museum became completely silent.","expected_behavior":"coherent continuation"}

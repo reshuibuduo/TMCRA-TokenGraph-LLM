@@ -1,0 +1,28 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.DS_Store
+
+# Local data and generated runs
+data/
+datasets/
+runs/
+outputs/
+open_corpus/
+hf_cache*/
+*.log
+*.pid
+
+# Large model artifacts
+*.pt
+*.pth
+*.safetensors
+*.ckpt
+
+# Private configuration
+.env
+*.env
+secrets.*
+config.local.*
