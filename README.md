@@ -1,5 +1,10 @@
 # TMCRA TokenGraph-LLM
 
+[![GitHub Repo](https://img.shields.io/badge/GitHub-source-181717?logo=github)](https://github.com/reshuibuduo/TMCRA-TokenGraph-LLM)
+[![Model Release](https://img.shields.io/badge/GitHub-Release-blue?logo=github)](https://github.com/reshuibuduo/TMCRA-TokenGraph-LLM/releases/tag/v0.1.0-prototype)
+[![Hugging Face](https://img.shields.io/badge/Hugging%20Face-model-yellow?logo=huggingface)](https://huggingface.co/2009YU/TMCRA-TokenGraph-LLM)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
 TMCRA TokenGraph-LLM is an experimental graph-native autoregressive language model prototype. It is not a Transformer wrapper and does not call an external LLM at inference time. Text is generated from token-level graph encoding, graph message passing, and a graph causal decoder.
 
 This repository is a research prototype package prepared for open-source review. It demonstrates that a token-level graph model can be trained with next-token prediction plus graph path objectives, and that each generated token can be inspected through graph-node attribution. It is not a polished SDK and it is not a production LLM.
@@ -27,9 +32,8 @@ The strongest current behavior is short story-style continuation. The weakest be
 
 The current prototype checkpoint is published separately from the source tree:
 
-- GitHub Release: [v0.1.0 prototype checkpoint package](https://github.com/reshuibuduo/TMCRA-TokenGraph-LLM/releases/tag/v0.1.0-prototype)
-- Model asset: [`token_graph_llm_model_package_20260530.zip`](https://github.com/reshuibuduo/TMCRA-TokenGraph-LLM/releases/download/v0.1.0-prototype/token_graph_llm_model_package_20260530.zip)
-- Hugging Face model repo: [2009YU/TMCRA-TokenGraph-LLM](https://huggingface.co/2009YU/TMCRA-TokenGraph-LLM)
+[![Download Model Package](https://img.shields.io/badge/Download-model_package.zip-2ea44f)](https://github.com/reshuibuduo/TMCRA-TokenGraph-LLM/releases/download/v0.1.0-prototype/token_graph_llm_model_package_20260530.zip)
+[![Hugging Face Model](https://img.shields.io/badge/View_on-Hugging_Face-yellow?logo=huggingface)](https://huggingface.co/2009YU/TMCRA-TokenGraph-LLM)
 
 The source repository intentionally excludes `.pt` checkpoints and raw corpora. The release package includes the checkpoint, tokenizer, model card, manifest, checksums, and example outputs.
 
