@@ -1,34 +1,79 @@
 # TMCRA TokenGraph-LLM
 
-TMCRA TokenGraph-LLM 是一个实验性的图原生自回归语言模型原型。它不是 Transformer 外壳，也不会在推理时调用外部 LLM。文本由 token 级图编码、图消息传递和图结构自回归解码器生成。
+TMCRA TokenGraph-LLM 是一个实验性的图原生自回归语言模型原型。它不是 Transformer 外壳，也不会在推理时调用外部 LLM。文本生成来自 token 级图编码、图消息传递和图结构因果解码器。
 
-这个仓库是用于开源审阅的研究原型包。它证明 token 级图模型可以通过 next-token prediction 和图路径目标进行训练，并且可以对每个生成 token 做 graph node / edge attribution。它不是成熟 SDK，也不是生产可用 LLM。
+这个仓库是用于开源审阅的研究原型包。它展示了 token 级图模型可以通过 next-token prediction 和图路径目标进行训练，并且可以对每个生成 token 做 graph node / edge attribution。它不是成熟 SDK，也不是生产可用 LLM。
 
 ## 项目作用
 
 - 将文本或指令语料构造成 token-level graph。
 - 训练不依赖 Transformer self-attention 的图原生自回归解码器。
-- 以 next-token prediction 作为主目标。
-- 提供可选图结构训练目标：
+- 以 next-token prediction 作为主训练目标。
+- 增加可选图结构目标：
   - token path alignment
   - token transition path consistency
   - relation transition loss
   - causal path consistency loss
-  - 非 EOS 正则，缓解过早停止和短答塌缩
+  - 非 EOS 正则，用来缓解过早停止和短答塌缩
 - 提供 token attribution：生成 token -> top graph nodes -> incident graph edges。
 
 ## 当前状态
 
-当前原型可以学习英文 token 分布，并生成短自然语言片段，但还不是可用通用 LLM。主要短板包括指令跟随、精确事实回答、长程一致性、多语言生成和概念绑定。
+当前原型可以学习英文 token 分布，并生成短自然语言片段，但还不是可用的通用 LLM。主要短板包括指令跟随、精确事实回答、长程一致性、多语言生成和概念绑定。
 
 目前相对较好的能力是短故事续写。较弱的是精确问答、数字/事实回答、结构化列表和抽象定义。
+
+## 已发布模型
+
+当前 checkpoint 与源码分开发布：
+
+- GitHub Release：[v0.1.0 prototype checkpoint package](https://github.com/reshuibuduo/TMCRA-TokenGraph-LLM/releases/tag/v0.1.0-prototype)
+- 模型包：[`token_graph_llm_model_package_20260530.zip`](https://github.com/reshuibuduo/TMCRA-TokenGraph-LLM/releases/download/v0.1.0-prototype/token_graph_llm_model_package_20260530.zip)
+
+源码仓库默认不包含 `.pt` checkpoint 和原始训练语料。Release 模型包包含 checkpoint、tokenizer、model card、manifest、checksum 和样例输出。
+
+## 当前训练规模和样例
+
+已发布 checkpoint 基于 token-graph 数据集训练：
+
+- 训练样本：`920,048`
+- 验证样本：`80,004`
+- 词表大小：`1,012`
+- 模型结构：`dim=384`，`graph_layers=6`，`decoder_layers=8`，untied output embedding
+- 微调：额外 `3,000` steps，加入 relation-transition 和 causal-path 目标
+
+当前能力仍处在早期阶段。模型可以生成短英文片段，尤其是故事续写类文本，但还不是可靠的事实问答模型。
+
+贪心解码样例：
+
+```text
+Prompt:
+Continue the story in natural language.
+
+Output:
+to her mom. "Mom, can I have some oats?" she asked. Her mom said,
+"Yes, but be careful. That is very yummy!" Mia was so excited to eat
+the oats that she wanted to show her friends.
+```
+
+弱项样例：
+
+```text
+Prompt:
+How deep was the water that rushed through the school?
+
+Output:
+feetings.com food.
+```
+
+这个能力边界是刻意写清楚的：本包主要展示图原生语言模型架构、训练路径和归因工具，不宣称已经达到成熟 LLM 水平。
 
 ## 目录结构
 
 ```text
 src/token_graph_llm/
   native_token_graph_common.py       tokenizer 工具
-  token_graph_llm_model_v1.py        图编码器、图解码器、训练 loss
+  token_graph_llm_model_v1.py        图编码器、图因果解码器、训练 loss
   train_token_graph_llm_v1.py        训练和微调入口
   generalization_eval_probe_v1.py    泛化/反复制测试
   token_attribution_v1.py            token 级图归因可视化
@@ -58,7 +103,7 @@ models/
 pip install -r requirements.txt
 ```
 
-GPU 训练需要安装与你 CUDA 环境匹配的 PyTorch。
+GPU 训练需要安装与你的 CUDA 环境匹配的 PyTorch。
 
 ## 数据格式
 
@@ -73,7 +118,7 @@ GPU 训练需要安装与你 CUDA 环境匹配的 PyTorch。
 }
 ```
 
-旧字段如 `answer`、`memory_nodes`、`event_units` 仅作为兼容路径。新语料应优先使用 `source_segments`、`text_units`、`target_text`。
+旧字段如 `answer`、`memory_nodes`、`event_units` 只作为兼容路径。新语料应优先使用 `source_segments`、`text_units`、`target_text`。
 
 ## 构建小型数据集
 
@@ -166,7 +211,7 @@ python generalization_eval_probe_v1.py \
   --train-neighbor-scan 10000
 ```
 
-该测试会输出 nearest train similarity、copy ratio、new-token ratio 和 repetition ratio，用于判断模型是否只是复制训练样本。
+该测试会输出 nearest train similarity、copy ratio、new-token ratio 和 repetition ratio，用于判断模型是否只是在复制训练样本。
 
 ## Token Attribution
 
@@ -182,7 +227,7 @@ HTML 会展示每个生成 token 对应的 top graph nodes 和 incident edges。
 
 ## 模型文件
 
-本源码包默认不包含 checkpoint。建议将 checkpoint 作为单独 release asset 或 Hugging Face model file 发布。若要放入仓库，请放到 `models/`，并使用 Git LFS。
+源码包默认不包含 checkpoint。请使用上方 Release 链接中的模型包，或将兼容 checkpoint 作为单独 GitHub Release / Hugging Face model file 发布。
 
 ## 安全和隐私
 

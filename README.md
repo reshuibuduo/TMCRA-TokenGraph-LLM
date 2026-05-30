@@ -23,6 +23,51 @@ The current prototype can learn English-like token distributions and produce sho
 
 The strongest current behavior is short story-style continuation. The weakest behavior is precise QA, numeric/factual answers, structured lists, and abstract definitions.
 
+## Released Checkpoint
+
+The current prototype checkpoint is published separately from the source tree:
+
+- GitHub Release: [v0.1.0 prototype checkpoint package](https://github.com/reshuibuduo/TMCRA-TokenGraph-LLM/releases/tag/v0.1.0-prototype)
+- Model asset: [`token_graph_llm_model_package_20260530.zip`](https://github.com/reshuibuduo/TMCRA-TokenGraph-LLM/releases/download/v0.1.0-prototype/token_graph_llm_model_package_20260530.zip)
+
+The source repository intentionally excludes `.pt` checkpoints and raw corpora. The release package includes the checkpoint, tokenizer, model card, manifest, checksums, and example outputs.
+
+## Current Training Scale And Examples
+
+The released checkpoint continues from a base model trained on a token-graph dataset with:
+
+- train samples: `920,048`
+- validation samples: `80,004`
+- vocabulary size: `1,012`
+- model shape: `dim=384`, `graph_layers=6`, `decoder_layers=8`, untied output embedding
+- finetuning: `3,000` additional steps with relation-transition and causal-path objectives
+
+Observed capability is still early-stage. It can generate short English fragments, especially story-like continuations, but it is not a reliable factual QA model.
+
+Example greedy output:
+
+```text
+Prompt:
+Continue the story in natural language.
+
+Output:
+to her mom. "Mom, can I have some oats?" she asked. Her mom said,
+"Yes, but be careful. That is very yummy!" Mia was so excited to eat
+the oats that she wanted to show her friends.
+```
+
+Weak-case example:
+
+```text
+Prompt:
+How deep was the water that rushed through the school?
+
+Output:
+feetings.com food.
+```
+
+This boundary is intentional in the release notes: the package is meant to expose the graph-native language-model architecture, training path, and attribution tools, not to claim mature LLM performance.
+
 ## Repository Layout
 
 ```text
@@ -184,7 +229,7 @@ The HTML output shows top graph nodes and incident edges for each generated toke
 
 ## Model Checkpoints
 
-Checkpoints are intentionally excluded from this source package. Put released checkpoints under `models/` or publish them as separate release assets / Hugging Face model files.
+Checkpoints are intentionally excluded from this source package. Use the released checkpoint package linked above, or publish compatible checkpoints as separate GitHub Release assets / Hugging Face model files.
 
 ## Security And Privacy
 
