@@ -25,6 +25,64 @@ The current default line is **Stage C / Dynamic Token Graph Decoder V3**. Stage 
   - edge-type prediction
 - Provides token attribution for generated text: generated token -> top graph nodes -> incident graph edges.
 
+## Detailed Next-Token Mechanism
+
+Stage C predicts the next token through a graph-native causal path:
+
+```text
+schema2 text
+  -> token graph nodes and typed candidate edges
+  -> learned edge-gated graph propagation
+  -> dynamic generated-token graph nodes
+  -> prefix-edge + context-edge gated decoding
+  -> vocabulary logits for the next token
+```
+
+1. **Token graph construction.** The input prompt, source segments, text units, optional knowledge tokens, and optional teacher semantic spans are converted into token-level graph nodes. Candidate edges include lexical, unit, semantic, causal-target, knowledge, and typed relation edges. These edges are candidates, not fixed reasoning rules.
+
+2. **Node initialization.** Each graph node starts from token embedding plus node-type embedding:
+
+```text
+h_i^0 = norm(token_emb(token_i) + node_type_emb(type_i))
+```
+
+3. **Learned edge activation.** For every candidate edge `(i -> j)`, the graph layer computes a learned gate from source node, destination node, and edge-type embedding:
+
+```text
+gate_ij = sigmoid(MLP([h_i, h_j, edge_type_emb(e_ij)]))
+message_ij = MLP([h_i, edge_type_emb(e_ij)]) * gate_ij
+```
+
+Messages are aggregated into destination nodes and passed through graph layers. This is where the model learns which token relations matter; the graph builder proposes edges, but the model decides their strength.
+
+4. **Context graph state.** After graph propagation, the encoded node states become the context graph. The model also scores context nodes for support and answer-overlap signals. These scores form a graph prior over which context nodes should influence generation.
+
+5. **Generated tokens become dynamic graph nodes.** During teacher-forced training, target-prefix tokens can be inserted as causal target-prefix graph nodes. During inference, already generated tokens are represented as decoder-side answer nodes. They are not handled by Transformer self-attention; they are processed by graph-style prefix gates and context gates.
+
+6. **Prefix-edge decoding.** For each generated position `t`, the decoder looks back over a bounded generated-token prefix window and learns which previous generated-token nodes should influence the current node:
+
+```text
+prefix_msg_t = weighted_sum(previous_generated_nodes, learned_prefix_gate)
+```
+
+7. **Context-edge decoding.** The current generated-token node also opens learned tunnel/context edges to encoded context graph nodes:
+
+```text
+context_msg_t = weighted_sum(context_nodes, learned_context_gate + graph_prior)
+```
+
+8. **Next-token logits.** The generated-token node is updated from its current state, prefix message, and context message. A language head maps the updated graph-decoder state to vocabulary logits:
+
+```text
+d_t = GraphDecoderBlock(token_state_t, prefix_msg_t, context_msg_t)
+logits_t = LMHead(norm(d_t))
+next_token = argmax(logits_t) or sampled(logits_t)
+```
+
+9. **Training losses.** The main objective is next-token prediction. Auxiliary losses train graph-state prediction, support-node scoring, overlap scoring, decoder-to-context tunnel alignment, next-token-to-node alignment, and edge-type prediction. These losses are meant to make language generation depend on graph structure rather than only on local token frequency.
+
+The current implementation still has a normal vocabulary projection head, because any autoregressive language model needs a distribution over token ids. The difference is that the hidden state feeding that projection is produced by typed graph propagation and dynamic graph decoding, not Transformer self-attention.
+
 ## Current Status
 
 The Stage C prototype can generate longer English text than the earlier v0.1 checkpoint, and graph ablations show that typed graph edges materially affect generation. It is still not a usable general LLM. Current weaknesses include exact factual answering, stable long-range coherence, robust instruction following, strong grammar, multilingual generation, and reliable concept binding.
