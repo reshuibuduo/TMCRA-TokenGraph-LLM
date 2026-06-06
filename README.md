@@ -25,6 +25,43 @@ The current default line is **Stage C / Dynamic Token Graph Decoder V3**. Stage 
   - edge-type prediction
 - Provides token attribution for generated text: generated token -> top graph nodes -> incident graph edges.
 
+## Architecture Diagrams
+
+Overall Stage C path:
+
+```mermaid
+flowchart TD
+    A["Text / prompt / source segments / target text"] --> B["Tokenizer"]
+    B --> C["Token Graph Builder"]
+    C --> D["Token nodes"]
+    C --> E["Typed candidate edges"]
+    C --> F["Support / overlap / semantic labels"]
+    D --> G["TokenGraphEncoderV3"]
+    E --> G
+    F --> G
+    G --> H["Encoded context graph states"]
+    H --> I["Dynamic Token Graph Decoder"]
+    I --> J["Generated token node"]
+    J --> I
+    I --> K["LM head"]
+    K --> L["Next-token distribution"]
+```
+
+Single next-token decoding step:
+
+```mermaid
+flowchart LR
+    A["Encoded context graph<br/>N nodes"] --> D["Context gate<br/>learned tunnel edges"]
+    B["Generated prefix nodes<br/>bounded window W"] --> C["Prefix gate"]
+    C --> E["Dynamic generated-token node t"]
+    D --> E
+    E --> F["Graph decoder update"]
+    F --> G["Vocabulary logits"]
+    G --> H["next token"]
+    H --> I["Append as new graph node"]
+    I --> B
+```
+
 ## Detailed Next-Token Mechanism
 
 Stage C predicts the next token through a graph-native causal path:
@@ -82,6 +119,43 @@ next_token = argmax(logits_t) or sampled(logits_t)
 9. **Training losses.** The main objective is next-token prediction. Auxiliary losses train graph-state prediction, support-node scoring, overlap scoring, decoder-to-context tunnel alignment, next-token-to-node alignment, and edge-type prediction. These losses are meant to make language generation depend on graph structure rather than only on local token frequency.
 
 The current implementation still has a normal vocabulary projection head, because any autoregressive language model needs a distribution over token ids. The difference is that the hidden state feeding that projection is produced by typed graph propagation and dynamic graph decoding, not Transformer self-attention.
+
+## Complexity Compared With Transformer Attention
+
+Transformer decoders usually apply dense self-attention over the sequence. If `n` is sequence length and `d` is hidden dimension, the attention interaction cost grows roughly as:
+
+```text
+Transformer self-attention per layer: O(n^2 * d)
+```
+
+TGCLM Stage C does not compute all token-pair attention over the full sequence. It uses a candidate token graph and learned edge gates. Let:
+
+- `N` = encoded context graph nodes;
+- `E` = candidate graph edges;
+- `T` = generated token count;
+- `W` = bounded generated-prefix window;
+- `d` = hidden dimension;
+- `L_g` = graph encoder layers;
+- `L_d` = dynamic graph decoder layers.
+
+The current implementation is approximately:
+
+```text
+Graph encoder:        O(L_g * (N + E) * d)
+Dynamic prefix path:  O(L_d * T * W * d)
+Context tunnel path:  O(L_d * T * N * d)
+```
+
+If the builder keeps `E = O(kN)` with small average degree `k`, graph encoding grows close to linear in the number of graph nodes instead of quadratic in all token pairs. The generated prefix path is also bounded by `W`, so it avoids `O(T^2)` generated-token self-attention. The current context tunnel still scans encoded context nodes for each generated position, so it is not free; future sparse/top-k context tunneling can reduce that term.
+
+| Mechanism | Main interaction pattern | Growth driver |
+|---|---|---|
+| Transformer decoder | dense all-token self-attention | `O(n^2 * d)` |
+| TGCLM graph encoder | message passing over candidate edges | `O((N + E) * d)` per graph layer |
+| TGCLM dynamic prefix decoder | bounded generated-token graph window | `O(T * W * d)` per decoder layer |
+| TGCLM context tunnel decoder | generated token to encoded context graph | `O(T * N * d)` per decoder layer |
+
+This means the current benefit is not a blanket claim of constant-time generation. The concrete architectural difference is that TGCLM replaces dense sequence-wide self-attention with typed graph candidate edges, learned edge activation, bounded prefix graph messages, and explicit context tunneling.
 
 ## Current Status
 
