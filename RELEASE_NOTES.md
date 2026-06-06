@@ -27,7 +27,7 @@ Included:
 
 Stage C checkpoint package:
 
-- GitHub Release asset: `tgclm_stagec_model_package_20260606.zip`
+- GitHub Release asset: `tmcra_tokengraph_stagec_model_package_20260606.zip`
 - checkpoint: `token_graph_dynamic_decoder_v3.pt`
 - model size: about 114.6M parameters
 - architecture: `dim=512`, `graph_layers=8`, `decoder_layers=10`, untied embeddings

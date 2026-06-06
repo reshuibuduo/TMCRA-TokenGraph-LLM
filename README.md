@@ -167,7 +167,7 @@ The strongest current behavior is story-style continuation. The weakest behavior
 
 The current Stage C checkpoint is published separately from the source tree:
 
-[![Download Stage C Package](https://img.shields.io/badge/Download-stagec_model_package.zip-2ea44f)](https://github.com/reshuibuduo/TMCRA-TokenGraph-LLM/releases/download/v0.2.0-stagec/tgclm_stagec_model_package_20260606.zip)
+[![Download Stage C Package](https://img.shields.io/badge/Download-stagec_model_package.zip-2ea44f)](https://github.com/reshuibuduo/TMCRA-TokenGraph-LLM/releases/download/v0.2.0-stagec/tmcra_tokengraph_stagec_model_package_20260606.zip)
 [![Hugging Face Model](https://img.shields.io/badge/View_on-Hugging_Face-yellow?logo=huggingface)](https://huggingface.co/2009YU/TMCRA-TokenGraph-LLM)
 
 The source repository intentionally excludes `.pt` checkpoints and raw corpora. The release package is model-only: checkpoint, tokenizer, dataset manifest, training summary, checksum, and evaluation notes. Full-chain training code lives in this source repository.

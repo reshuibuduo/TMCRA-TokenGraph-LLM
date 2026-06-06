@@ -176,7 +176,7 @@ Stage C 比旧 v0.1 checkpoint 能生成更长的英文文本。图消融显示 
 
 当前 Stage C checkpoint 与源码分开发布：
 
-[![下载 Stage C 模型包](https://img.shields.io/badge/Download-stagec_model_package.zip-2ea44f)](https://github.com/reshuibuduo/TMCRA-TokenGraph-LLM/releases/download/v0.2.0-stagec/tgclm_stagec_model_package_20260606.zip)
+[![下载 Stage C 模型包](https://img.shields.io/badge/Download-stagec_model_package.zip-2ea44f)](https://github.com/reshuibuduo/TMCRA-TokenGraph-LLM/releases/download/v0.2.0-stagec/tmcra_tokengraph_stagec_model_package_20260606.zip)
 [![Hugging Face 模型页](https://img.shields.io/badge/View_on-Hugging_Face-yellow?logo=huggingface)](https://huggingface.co/2009YU/TMCRA-TokenGraph-LLM)
 
 源码仓库默认不包含 `.pt` checkpoint 和原始训练语料。Release 模型包只放模型资产：checkpoint、tokenizer、dataset manifest、training summary、checksum 和评估说明。完整训练链路代码放在源码仓库。

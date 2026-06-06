@@ -37,7 +37,7 @@ tokenizer.json
 Recommended release asset for Stage C:
 
 ```text
-tgclm_stagec_model_package_20260606.zip
+tmcra_tokengraph_stagec_model_package_20260606.zip
 ```
 
 The source repository excludes `.pt`, `.pth`, `.safetensors`, and raw corpora by default.
