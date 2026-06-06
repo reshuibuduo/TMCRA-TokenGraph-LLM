@@ -47,7 +47,7 @@ Stage C 比旧 v0.1 checkpoint 能生成更长的英文文本。图消融显示 
 [![下载 Stage C 模型包](https://img.shields.io/badge/Download-stagec_model_package.zip-2ea44f)](https://github.com/reshuibuduo/TMCRA-TokenGraph-LLM/releases/download/v0.2.0-stagec/tgclm_stagec_model_package_20260606.zip)
 [![Hugging Face 模型页](https://img.shields.io/badge/View_on-Hugging_Face-yellow?logo=huggingface)](https://huggingface.co/2009YU/TMCRA-TokenGraph-LLM)
 
-源码仓库默认不包含 `.pt` checkpoint 和原始训练语料。Release 模型包包含 checkpoint、tokenizer、dataset manifest、training summary、checksum 和评估说明。
+源码仓库默认不包含 `.pt` checkpoint 和原始训练语料。Release 模型包只放模型资产：checkpoint、tokenizer、dataset manifest、training summary、checksum 和评估说明。完整训练链路代码放在源码仓库。
 
 旧版本：
 
@@ -113,12 +113,23 @@ src/token_graph_llm/
   token_attribution_v1.py
 
 scripts/
+  build_schema2_from_open_longtext_parquets.py
+  build_schema2_from_cosmopedia_parquets.py
+  build_general_ability_schema2_from_hf.py
+  build_general_ability_schema2_from_hf_parquets.py
+  compose_long_multitask_schema2.py
+  annotate_token_semantic_graph_with_openai.py
+  annotate_token_semantic_graph_with_local_hf.py
   build_native_token_reasoning_graph_dataset_v3.py
   build_native_token_reasoning_graph_dataset_v3_parallel.py
   build_native_token_reasoning_graph_dataset_v3_resume_spill.py
+  run_stagec_full_chain_template.sh
+  run_stagec_sharded_training_template.sh
   download_hf_sources.py
 
 docs/
+  FULL_CHAIN_TRAINING.md
+  FULL_CHAIN_TRAINING_ZH.md
   TGCLM_STAGEC_TECHNICAL_OVERVIEW.md
   TGCLM_STAGEC_TECHNICAL_OVERVIEW_ZH.md
   STAGEC_DETAILED_BENCHMARK_SMOKE_20260606.md
@@ -139,6 +150,14 @@ pip install -r requirements.txt
 ```
 
 GPU 训练需要安装与你的 CUDA 环境匹配的 PyTorch。
+
+全链路数据转换 / 可选 teacher 标注需要：
+
+```bash
+pip install -r requirements-full-chain.txt
+```
+
+其中 `transformers` 只用于本地 teacher 标注。TokenGraph-LLM 模型本体仍然是图原生结构，不是 Transformer decoder 外壳。
 
 ## 数据格式
 
@@ -187,6 +206,23 @@ manifest.json
 ```
 
 大规模语料可使用 `scripts/` 下的 parallel / resume-spill builder。
+
+## 全链路训练流程
+
+公开全链路文档见 [docs/FULL_CHAIN_TRAINING_ZH.md](docs/FULL_CHAIN_TRAINING_ZH.md)。它覆盖：
+
+- 开源文本或 QA 语料转换为 schema2 JSONL；
+- 通过 OpenAI 兼容接口或本地 Hugging Face 模型做可选语义 teacher 标注；
+- 构建 token-level reasoning graph dataset；
+- 使用 `simple_plus_causal_target` graph mode 训练 Stage C；
+- 图消融和 token attribution 评测。
+
+可运行模板：
+
+```bash
+bash scripts/run_stagec_full_chain_template.sh
+bash scripts/run_stagec_sharded_training_template.sh
+```
 
 ## Stage C 风格训练
 

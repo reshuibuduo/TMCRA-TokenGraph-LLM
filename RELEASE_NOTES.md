@@ -11,7 +11,13 @@ Included:
   - `train_token_graph_dynamic_decoder_v3.py`
   - `train_graph_causal_decoder_v2.py`
   - v3 benchmark/evaluation helpers
+- Full-chain training source update:
+  - open-corpus schema2 conversion scripts
+  - optional semantic teacher annotation scripts
+  - token graph dataset builders
+  - Stage C full-chain and sharded training templates
 - Stage C technical documentation in English and Chinese.
+- Full-chain training documentation in English and Chinese.
 - Token-level semantic graph schema.
 - Stage C smoke benchmark notes:
   - Stage A/B/C loss comparison
@@ -25,6 +31,7 @@ Stage C checkpoint package:
 - checkpoint: `token_graph_dynamic_decoder_v3.pt`
 - model size: about 114.6M parameters
 - architecture: `dim=512`, `graph_layers=8`, `decoder_layers=10`, untied embeddings
+- Release assets are model packages only. Algorithm, builder, trainer, and evaluation code are updated in the source repository.
 
 Current experimental conclusion:
 

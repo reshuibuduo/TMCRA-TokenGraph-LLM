@@ -1032,6 +1032,12 @@ def main() -> None:
     parser.add_argument("--input-jsonl", required=True, type=Path)
     parser.add_argument("--out-dir", required=True, type=Path)
     parser.add_argument("--limit", type=int, default=0)
+    parser.add_argument(
+        "--skip-records",
+        type=int,
+        default=0,
+        help="Skip this many source JSONL records before applying --limit. Useful for non-overlapping shard builds.",
+    )
     parser.add_argument("--seed", type=int, default=17)
     parser.add_argument("--tokenizer-kind", choices=["hf_pretrained", "hf_bpe", "char_bpe"], default="hf_pretrained")
     parser.add_argument("--pretrained-tokenizer", default="gpt2")
@@ -1074,7 +1080,10 @@ def main() -> None:
 
     started = time.perf_counter()
     print(f"[stage] loading rows from {args.input_jsonl}", flush=True)
-    rows = load_rows(args.input_jsonl, limit=args.limit)
+    load_limit = args.limit + args.skip_records if args.limit else 0
+    rows = load_rows(args.input_jsonl, limit=load_limit)
+    if args.skip_records:
+        rows = rows[args.skip_records :]
     print(f"[stage] loaded rows={len(rows)} elapsed={time.perf_counter() - started:.2f}s", flush=True)
     train_texts = collect_texts(rows, max_text_chars=args.max_text_chars)
     raw_train_text_count = len(train_texts)
@@ -1178,6 +1187,8 @@ def main() -> None:
     manifest = {
         "dataset_version": "native_token_reasoning_graph_v3_simple_plus" if args.graph_mode == "simple_plus_causal_target" else "native_token_reasoning_graph_v3_base",
         "input_jsonl": str(args.input_jsonl),
+        "skip_records": args.skip_records,
+        "limit": args.limit,
         "train_count": train_count,
         "val_count": val_count,
         "annotation_count": annotation_count,

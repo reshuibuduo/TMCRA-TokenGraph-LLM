@@ -38,7 +38,7 @@ The current Stage C checkpoint is published separately from the source tree:
 [![Download Stage C Package](https://img.shields.io/badge/Download-stagec_model_package.zip-2ea44f)](https://github.com/reshuibuduo/TMCRA-TokenGraph-LLM/releases/download/v0.2.0-stagec/tgclm_stagec_model_package_20260606.zip)
 [![Hugging Face Model](https://img.shields.io/badge/View_on-Hugging_Face-yellow?logo=huggingface)](https://huggingface.co/2009YU/TMCRA-TokenGraph-LLM)
 
-The source repository intentionally excludes `.pt` checkpoints and raw corpora. The release package includes the checkpoint, tokenizer, dataset manifest, training summary, checksum, and evaluation notes.
+The source repository intentionally excludes `.pt` checkpoints and raw corpora. The release package is model-only: checkpoint, tokenizer, dataset manifest, training summary, checksum, and evaluation notes. Full-chain training code lives in this source repository.
 
 Previous release:
 
@@ -106,15 +106,26 @@ src/token_graph_llm/
   token_attribution_v1.py            token-level graph attribution
 
 scripts/
+  build_schema2_from_open_longtext_parquets.py
+  build_schema2_from_cosmopedia_parquets.py
+  build_general_ability_schema2_from_hf.py
+  build_general_ability_schema2_from_hf_parquets.py
+  compose_long_multitask_schema2.py
+  annotate_token_semantic_graph_with_openai.py
+  annotate_token_semantic_graph_with_local_hf.py
   build_native_token_reasoning_graph_dataset_v3.py
   build_native_token_reasoning_graph_dataset_v3_parallel.py
   build_native_token_reasoning_graph_dataset_v3_resume_spill.py
+  run_stagec_full_chain_template.sh
+  run_stagec_sharded_training_template.sh
   download_hf_sources.py
 
 examples/
   generalization_probe_prompts.jsonl
 
 docs/
+  FULL_CHAIN_TRAINING.md
+  FULL_CHAIN_TRAINING_ZH.md
   TGCLM_STAGEC_TECHNICAL_OVERVIEW.md
   TGCLM_STAGEC_TECHNICAL_OVERVIEW_ZH.md
   STAGEC_DETAILED_BENCHMARK_SMOKE_20260606.md
@@ -137,6 +148,14 @@ pip install -r requirements.txt
 ```
 
 For GPU training, install a PyTorch build matching your CUDA environment from the official PyTorch instructions.
+
+For the full data-conversion / optional teacher-annotation path:
+
+```bash
+pip install -r requirements-full-chain.txt
+```
+
+The optional `transformers` dependency is only for local teacher annotation. The TokenGraph-LLM model itself remains graph-native and does not wrap a Transformer decoder.
 
 ## Data Schema
 
@@ -181,6 +200,23 @@ manifest.json
 ```
 
 For larger corpora, use the parallel/resume-spill builders in `scripts/`.
+
+## Full-Chain Training Pipeline
+
+The public full-chain path is documented in [docs/FULL_CHAIN_TRAINING.md](docs/FULL_CHAIN_TRAINING.md). It covers:
+
+- converting open text or QA corpora to schema2 JSONL;
+- optional semantic teacher annotation through an OpenAI-compatible endpoint or local Hugging Face model;
+- building token-level reasoning graph datasets;
+- Stage C training with `simple_plus_causal_target` graph mode;
+- graph ablation and token attribution evaluation.
+
+The runnable templates are:
+
+```bash
+bash scripts/run_stagec_full_chain_template.sh
+bash scripts/run_stagec_sharded_training_template.sh
+```
 
 ## Train Stage C Style
 

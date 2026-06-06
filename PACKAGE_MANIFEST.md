@@ -15,9 +15,13 @@ paper_preparation/token_graph_llm_open_source_20260530
 - Token attribution script with JSON and HTML outputs.
 - Stage C graph ablation and benchmark smoke scripts.
 - Dataset builders for token-level graph training data.
+- Open-corpus schema2 conversion scripts.
+- Optional semantic teacher annotation scripts for OpenAI-compatible endpoints and local Hugging Face teacher models.
+- Full-chain and sharded Stage C training templates.
 - Hugging Face open-corpus download helper.
 - English and Chinese README files.
 - Stage C architecture and experiment notes.
+- Full-chain training documentation.
 - Token-level semantic graph schema.
 - MIT license.
 

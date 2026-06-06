@@ -1,0 +1,10 @@
+torch>=2.1
+tokenizers>=0.15
+datasets>=2.18
+tqdm>=4.66
+huggingface_hub>=0.23
+pyarrow>=15.0
+
+# Optional only when using a local Hugging Face causal LM as a semantic teacher.
+# The TokenGraph-LLM model itself is not a Transformer wrapper.
+transformers>=4.40
