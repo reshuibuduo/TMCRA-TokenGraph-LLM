@@ -1,15 +1,15 @@
-# TGCLM Stage C Technical Overview
+# TMCRA TokenGraph-LLM Stage C Technical Overview
 
 Date: 2026-06-06  
 Version: Stage C / Dynamic Token Graph Decoder V3  
 Status: experimental graph-native language model prototype
 
-## What TGCLM Is
+## What TMCRA TokenGraph-LLM Is
 
-TGCLM stands for **Token Graph Causal Language Model**.
+TMCRA TokenGraph-LLM is the public project name for this graph-native causal language model prototype.
 
 It is an experimental non-Transformer autoregressive language model. Instead of
-using dense Transformer self-attention, TGCLM represents prompt tokens, context
+using dense Transformer self-attention, TMCRA TokenGraph-LLM represents prompt tokens, context
 tokens, semantic spans, and generated tokens as graph nodes. Candidate token
 relations are represented as typed edges, and the model learns which edges
 should participate in generation through learned edge gates and dynamic graph
@@ -108,7 +108,7 @@ Each edge has an edge type embedding:
 r_e = EdgeTypeEmb(edge_type_e)
 ```
 
-For every graph layer, TGCLM learns an edge gate:
+For every graph layer, TMCRA TokenGraph-LLM learns an edge gate:
 
 ```text
 g_e = sigmoid(MLP([h_src, h_dst, r_e]))

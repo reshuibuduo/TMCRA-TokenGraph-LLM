@@ -1,12 +1,12 @@
 # Token-Level Semantic Graph Schema
 
-This schema is for training-time graph supervision in TGCLM. It keeps the base
+This schema is for training-time graph supervision in TMCRA TokenGraph-LLM. It keeps the base
 token graph deterministic while allowing an LLM teacher or a rule-free
 preprocessor to add token-level semantic edges.
 
 ## Goal
 
-TGCLM should learn language reasoning as graph dynamics:
+TMCRA TokenGraph-LLM should learn language reasoning as graph dynamics:
 
 - token nodes carry the language surface;
 - typed candidate edges expose possible relations;

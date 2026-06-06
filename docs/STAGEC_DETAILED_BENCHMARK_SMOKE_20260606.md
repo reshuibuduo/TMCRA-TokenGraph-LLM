@@ -8,7 +8,7 @@ Checkpoint：`runs/train_dynamic_v3_stageC_full1m_stream_bf16_b4g4_w8_512_g8_d10
 
 ## 可跑的小模型 Benchmark
 
-当前适合 TGCLM 早期阶段的 benchmark：
+当前适合 TMCRA TokenGraph-LLM 早期阶段的 benchmark：
 
 1. TinyStories validation smoke
    - 类型：故事续写生成。
@@ -22,7 +22,7 @@ Checkpoint：`runs/train_dynamic_v3_stageC_full1m_stream_bf16_b4g4_w8_512_g8_d10
 
 3. BabyLM / BLiMP 全套
    - 类型：小模型语言能力综合评估。
-   - 当前状态：可以做，但需要把 TGCLM 封装成完整 likelihood adapter，后续可接入更标准的 evaluation pipeline。
+   - 当前状态：可以做，但需要把 TMCRA TokenGraph-LLM 封装成完整 likelihood adapter，后续可接入更标准的 evaluation pipeline。
 
 ## TinyStories Validation Smoke
 
@@ -127,7 +127,7 @@ Normal：
 
 ## 下一步建议
 
-1. 补 TGCLM 的正式 likelihood adapter
+1. 补 TMCRA TokenGraph-LLM 的正式 likelihood adapter
    - 支持批量 BLiMP 全套、BabyLM 子集、WikiText/TinyStories perplexity。
 
 2. 加强 graph-to-token grounding loss

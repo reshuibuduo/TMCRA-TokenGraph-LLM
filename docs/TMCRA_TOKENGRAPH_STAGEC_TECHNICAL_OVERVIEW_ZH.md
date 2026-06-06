@@ -1,4 +1,4 @@
-# TGCLM Stage C 技术文档
+# TMCRA TokenGraph-LLM Stage C 技术文档
 
 日期：2026-06-06  
 版本：Stage C / Dynamic Token Graph Decoder V3  
@@ -6,7 +6,7 @@
 
 ## 1. 项目定位
 
-TGCLM，全称可以暂定为 **Token Graph Causal Language Model**。它是从 TMCRA 图记忆算法延伸出的另一条技术路线：把原来“事件级、记忆级、路径级”的图推理思想下沉到 **token 级语言生成**。
+TMCRA TokenGraph-LLM 是从 TMCRA 图记忆算法延伸出的另一条技术路线：把原来“事件级、记忆级、路径级”的图推理思想下沉到 **token 级语言生成**。
 
 当前目标不是做检索增强，也不是做 embedding 相似度召回，而是训练一个 **图结构原生的自回归语言模型**：
 
@@ -18,7 +18,7 @@ TGCLM，全称可以暂定为 **Token Graph Causal Language Model**。它是从 
 
 一句话定义：
 
-> TGCLM 是一个非 Transformer 的 token-level graph-native causal language model，用图消息传递、边门控、路径隧穿和动态图 token 解码来学习 next-token generation。
+> TMCRA TokenGraph-LLM 是一个非 Transformer 的 token-level graph-native causal language model，用图消息传递、边门控、路径隧穿和动态图 token 解码来学习 next-token generation。
 
 ## 2. 当前最新模型
 
@@ -67,7 +67,7 @@ TOKEN_LEVEL_SEMANTIC_GRAPH_SCHEMA.md
 
 ## 3. 总体架构
 
-TGCLM 当前由五层组成：
+TMCRA TokenGraph-LLM 当前由五层组成：
 
 1. Tokenizer
 2. Token Graph Builder
@@ -96,9 +96,9 @@ flowchart TD
 核心区别：
 
 - Transformer 是 dense attention over sequence；
-- TGCLM 是 sparse typed graph message passing over token nodes；
+- TMCRA TokenGraph-LLM 是 sparse typed graph message passing over token nodes；
 - Transformer 每层计算所有 token 对之间的注意力；
-- TGCLM 每层只沿候选边传播，并学习边是否激活。
+- TMCRA TokenGraph-LLM 每层只沿候选边传播，并学习边是否激活。
 
 ## 4. Tokenizer 层
 
@@ -116,7 +116,7 @@ flowchart TD
 - Hugging Face BPE tokenizer JSON；
 - GPT-style tokenizer 作为成熟 tokenization 入口。
 
-注意：使用成熟 tokenizer 不等于使用 Transformer。只要后续模型主体不是 Transformer attention，就不会改变 TGCLM 的架构路线。
+注意：使用成熟 tokenizer 不等于使用 Transformer。只要后续模型主体不是 Transformer attention，就不会改变 TMCRA TokenGraph-LLM 的架构路线。
 
 ## 5. Token Graph Builder
 
@@ -309,18 +309,18 @@ context_prior_i = context_token_score_i + answer_overlap_score_i
 
 它不是外部检索分数，而是模型内部对上下文节点参与生成的打分。
 
-## 8. 隧穿机制在 TGCLM 中的变化
+## 8. 隧穿机制在 TMCRA TokenGraph-LLM 中的变化
 
 原 TMCRA 里的隧穿用于记忆链路穿透：跨轮次、跨事件、跨 profile/temporal/unit 的软连接。
 
-TGCLM 中，隧穿下沉到 token 级：
+TMCRA TokenGraph-LLM 中，隧穿下沉到 token 级：
 
 - query token 与 source token 可以形成 overlap/tunnel；
 - semantic span token 之间可以形成 semantic tunnel；
 - generated token 可以通过 decoder tunnel 连接 context token；
 - next-token-node loss 约束生成位置去找对应 token node。
 
-这意味着 TGCLM 的“推理路径”不是一句话级别，而是 token 节点到 token 节点的动态图路径。
+这意味着 TMCRA TokenGraph-LLM 的“推理路径”不是一句话级别，而是 token 节点到 token 节点的动态图路径。
 
 ## 9. 训练目标
 
@@ -558,7 +558,7 @@ release asset eval/ or local eval output
 
 当前最准确判断：
 
-> Stage C 已经证明 TGCLM 的图结构会影响语言生成，并且能训练出早期自然语言能力；但它还不是可用 LLM，更像一个已经跑通的 graph-native language model prototype。
+> Stage C 已经证明 TMCRA TokenGraph-LLM 的图结构会影响语言生成，并且能训练出早期自然语言能力；但它还不是可用 LLM，更像一个已经跑通的 graph-native language model prototype。
 
 ## 13. 与 Transformer 的核心差异
 
@@ -569,7 +569,7 @@ Transformer：
 复杂度约 O(n^2 * d)
 ```
 
-TGCLM：
+TMCRA TokenGraph-LLM：
 
 ```text
 每层沿 token graph candidate edges 做 message passing
@@ -583,7 +583,7 @@ TGCLM：
 - 如果图保持稀疏，则 `E` 远小于 `N^2`；
 - 如果 Builder 构出过密图，成本也会升高。
 
-因此，TGCLM 的理论优势取决于能否构造高质量稀疏图，并训练模型学会激活正确边。
+因此，TMCRA TokenGraph-LLM 的理论优势取决于能否构造高质量稀疏图，并训练模型学会激活正确边。
 
 ## 14. 当前主要技术问题
 
@@ -678,11 +678,11 @@ edge activation sparsity / stability loss
 
 可以说：
 
-> We release an experimental graph-native causal language model prototype. Unlike Transformer decoders, TGCLM represents prompt tokens, context tokens, and generated tokens as graph nodes, and learns typed edge activation and dynamic graph decoding for next-token generation.
+> We release an experimental graph-native causal language model prototype. Unlike Transformer decoders, TMCRA TokenGraph-LLM represents prompt tokens, context tokens, and generated tokens as graph nodes, and learns typed edge activation and dynamic graph decoding for next-token generation.
 
 中文：
 
-> TGCLM 是一个实验性的图原生因果语言模型。它不使用 Transformer attention，而是把输入 token 和生成 token 都表示为图节点，通过候选边、边门控、路径隧穿和动态图解码来学习自然语言生成。
+> TMCRA TokenGraph-LLM 是一个实验性的图原生因果语言模型。它不使用 Transformer attention，而是把输入 token 和生成 token 都表示为图节点，通过候选边、边门控、路径隧穿和动态图解码来学习自然语言生成。
 
 不要说：
 

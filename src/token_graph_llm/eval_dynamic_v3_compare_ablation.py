@@ -228,13 +228,13 @@ def render_html(payload: dict[str, Any]) -> str:
             f"<tbody>{''.join(rows)}</tbody></table></section>"
         )
     return (
-        "<!doctype html><meta charset='utf-8'><title>TGCLM v3 attribution</title>"
+        "<!doctype html><meta charset='utf-8'><title>TMCRA TokenGraph-LLM v3 attribution</title>"
         "<style>body{font-family:Arial,sans-serif;background:#f6f7f9;color:#111;margin:0;padding:24px}"
         "section{background:white;border:1px solid #ddd;border-radius:8px;margin:18px 0;padding:16px}"
         "table{width:100%;border-collapse:collapse;table-layout:fixed}td,th{border-top:1px solid #eee;padding:8px;vertical-align:top}"
         ".chosen{font-weight:700;color:#0a57a3}.pill{display:inline-flex;gap:6px;border:1px solid #ccd;padding:3px 7px;border-radius:999px;margin:2px}"
         ".pill small,.node small{color:#667;margin-left:6px}.node{border-left:3px solid #0a57a3;background:#f3f8ff;margin:3px 0;padding:5px}</style>"
-        "<h1>TGCLM v3 Token Attribution</h1>"
+        "<h1>TMCRA TokenGraph-LLM v3 Token Attribution</h1>"
         f"<p>Run: {esc(payload.get('attribution_run'))}</p>{''.join(cards)}"
     )
 

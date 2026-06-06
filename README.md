@@ -128,7 +128,7 @@ Transformer decoders usually apply dense self-attention over the sequence. If `n
 Transformer self-attention per layer: O(n^2 * d)
 ```
 
-TGCLM Stage C does not compute all token-pair attention over the full sequence. It uses a candidate token graph and learned edge gates. Let:
+TMCRA TokenGraph-LLM Stage C does not compute all token-pair attention over the full sequence. It uses a candidate token graph and learned edge gates. Let:
 
 - `N` = encoded context graph nodes;
 - `E` = candidate graph edges;
@@ -151,11 +151,11 @@ If the builder keeps `E = O(kN)` with small average degree `k`, graph encoding g
 | Mechanism | Main interaction pattern | Growth driver |
 |---|---|---|
 | Transformer decoder | dense all-token self-attention | `O(n^2 * d)` |
-| TGCLM graph encoder | message passing over candidate edges | `O((N + E) * d)` per graph layer |
-| TGCLM dynamic prefix decoder | bounded generated-token graph window | `O(T * W * d)` per decoder layer |
-| TGCLM context tunnel decoder | generated token to encoded context graph | `O(T * N * d)` per decoder layer |
+| TMCRA TokenGraph-LLM graph encoder | message passing over candidate edges | `O((N + E) * d)` per graph layer |
+| TMCRA TokenGraph-LLM dynamic prefix decoder | bounded generated-token graph window | `O(T * W * d)` per decoder layer |
+| TMCRA TokenGraph-LLM context tunnel decoder | generated token to encoded context graph | `O(T * N * d)` per decoder layer |
 
-This means the current benefit is not a blanket claim of constant-time generation. The concrete architectural difference is that TGCLM replaces dense sequence-wide self-attention with typed graph candidate edges, learned edge activation, bounded prefix graph messages, and explicit context tunneling.
+This means the current benefit is not a blanket claim of constant-time generation. The concrete architectural difference is that TMCRA TokenGraph-LLM replaces dense sequence-wide self-attention with typed graph candidate edges, learned edge activation, bounded prefix graph messages, and explicit context tunneling.
 
 ## Current Status
 
@@ -258,8 +258,8 @@ examples/
 docs/
   FULL_CHAIN_TRAINING.md
   FULL_CHAIN_TRAINING_ZH.md
-  TGCLM_STAGEC_TECHNICAL_OVERVIEW.md
-  TGCLM_STAGEC_TECHNICAL_OVERVIEW_ZH.md
+  TMCRA_TOKENGRAPH_STAGEC_TECHNICAL_OVERVIEW.md
+  TMCRA_TOKENGRAPH_STAGEC_TECHNICAL_OVERVIEW_ZH.md
   STAGEC_DETAILED_BENCHMARK_SMOKE_20260606.md
   TOKEN_LEVEL_SEMANTIC_GRAPH_SCHEMA.md
   ARCHITECTURE_RUNTIME_ZH.md
