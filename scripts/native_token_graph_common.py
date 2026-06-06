@@ -185,8 +185,10 @@ class LearnedBpeTokenizer:
 
     @classmethod
     def from_json(cls, payload: dict[str, Any]) -> "LearnedBpeTokenizer":
-        if payload.get("type") == "huggingface_bpe_v1":
+        if payload.get("type") in {"huggingface_bpe_v1", "hf_pretrained_tokenizer_v1"}:
             return HuggingFaceBpeTokenizer.from_json(payload)
+        if "model" in payload and ("pre_tokenizer" in payload or "decoder" in payload):
+            return HuggingFaceBpeTokenizer(json.dumps(payload))
         return cls(merges=[tuple(pair) for pair in payload.get("merges", [])], vocab=dict(payload.get("vocab", {})))
 
 
@@ -203,7 +205,8 @@ class HuggingFaceBpeTokenizer:
         except Exception as exc:  # pragma: no cover - depends on optional package
             raise RuntimeError("Install `tokenizers` to use HuggingFaceBpeTokenizer") from exc
         self._tokenizer = Tokenizer.from_str(tokenizer_json)
-        self.tokenizer_json = tokenizer_json
+        self._tokenizer.add_special_tokens([PAD, BOS, EOS, UNK])
+        self.tokenizer_json = self._tokenizer.to_str()
         self.vocab = dict(self._tokenizer.get_vocab())
         self.id_to_token = {idx: token for token, idx in self.vocab.items()}
 
@@ -238,6 +241,30 @@ class HuggingFaceBpeTokenizer:
         tokenizer.train_from_iterator((str(text or "") for text in texts if str(text or "").strip()), trainer=trainer)
         return cls(tokenizer.to_str())
 
+    @classmethod
+    def from_pretrained_model(cls, model_name: str) -> "HuggingFaceBpeTokenizer":
+        """Load a mature LLM tokenizer and persist its backend tokenizer JSON.
+
+        The graph language model still trains from scratch. This only reuses the
+        tokenizer vocabulary and byte/subword boundary behavior from an existing
+        LLM tokenizer, avoiding the tiny char-BPE fragmentation seen in long
+        generation probes.
+        """
+        try:
+            from tokenizers import Tokenizer
+        except Exception as exc:  # pragma: no cover - depends on optional package
+            raise RuntimeError("Install `tokenizers` to load a pretrained tokenizer") from exc
+
+        tokenizer_path = Path(str(model_name))
+        if tokenizer_path.exists():
+            tokenizer = Tokenizer.from_file(str(tokenizer_path))
+        else:
+            tokenizer = Tokenizer.from_pretrained(str(model_name))
+        tokenizer.add_special_tokens([PAD, BOS, EOS, UNK])
+        wrapped = cls(tokenizer.to_str())
+        wrapped.pretrained_model_name = str(model_name)
+        return wrapped
+
     def encode_pieces(self, text: str, *, max_tokens: int | None = None) -> list[str]:
         encoded = self._tokenizer.encode(str(text or ""))
         tokens = list(encoded.tokens)
@@ -252,7 +279,12 @@ class HuggingFaceBpeTokenizer:
         return self._tokenizer.decode([int(idx) for idx in ids], skip_special_tokens=True).strip()
 
     def to_json(self) -> dict[str, Any]:
-        return {"type": "huggingface_bpe_v1", "tokenizer_json": self.tokenizer_json, "vocab": self.vocab}
+        payload = {"type": "huggingface_bpe_v1", "tokenizer_json": self.tokenizer_json, "vocab": self.vocab}
+        model_name = getattr(self, "pretrained_model_name", None)
+        if model_name:
+            payload["type"] = "hf_pretrained_tokenizer_v1"
+            payload["pretrained_model_name"] = model_name
+        return payload
 
     @classmethod
     def from_json(cls, payload: dict[str, Any]) -> "HuggingFaceBpeTokenizer":

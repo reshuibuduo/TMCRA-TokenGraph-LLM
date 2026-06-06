@@ -1,77 +1,93 @@
 # TMCRA TokenGraph-LLM
 
 [![GitHub Repo](https://img.shields.io/badge/GitHub-source-181717?logo=github)](https://github.com/reshuibuduo/TMCRA-TokenGraph-LLM)
-[![Model Release](https://img.shields.io/badge/GitHub-Release-blue?logo=github)](https://github.com/reshuibuduo/TMCRA-TokenGraph-LLM/releases/tag/v0.1.0-prototype)
+[![Stage C Release](https://img.shields.io/badge/GitHub-Stage_C_Release-blue?logo=github)](https://github.com/reshuibuduo/TMCRA-TokenGraph-LLM/releases/tag/v0.2.0-stagec)
 [![Hugging Face](https://img.shields.io/badge/Hugging%20Face-model-yellow?logo=huggingface)](https://huggingface.co/2009YU/TMCRA-TokenGraph-LLM)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-TMCRA TokenGraph-LLM is an experimental graph-native autoregressive language model prototype. It is not a Transformer wrapper and does not call an external LLM at inference time. Text is generated from token-level graph encoding, graph message passing, and a graph causal decoder.
+TMCRA TokenGraph-LLM is an experimental graph-native autoregressive language model prototype. It is not a Transformer wrapper and does not call an external LLM at inference time. Text is generated from token-level graph encoding, learned edge gates, graph message passing, and a dynamic graph causal decoder.
 
-This repository is a research prototype package prepared for open-source review. It demonstrates that a token-level graph model can be trained with next-token prediction plus graph path objectives, and that each generated token can be inspected through graph-node attribution. It is not a polished SDK and it is not a production LLM.
+The current default line is **Stage C / Dynamic Token Graph Decoder V3**. Stage C has about `114.6M` parameters and was trained on a million-scale token graph corpus with next-token, graph-state, tunnel, edge-type, and next-token-node objectives. It is still an early research prototype, not a polished SDK and not a production LLM.
 
 ## What This Project Does
 
 - Builds token-level graphs from text and instruction-style corpora.
 - Trains a graph-native autoregressive decoder without Transformer self-attention.
 - Keeps next-token prediction as the main objective.
-- Adds optional graph objectives:
-  - token path alignment
-  - token transition path consistency
-  - relation transition loss
-  - causal path consistency loss
-  - non-EOS regularization for early-stop collapse
+- Learns edge activation over typed candidate token edges.
+- Treats generated tokens as graph nodes during dynamic decoding.
+- Adds graph objectives:
+  - graph-state token prediction
+  - support-node scoring
+  - answer-overlap scoring
+  - decoder-to-context tunnel alignment
+  - next-token-to-node alignment
+  - edge-type prediction
 - Provides token attribution for generated text: generated token -> top graph nodes -> incident graph edges.
 
 ## Current Status
 
-The current prototype can learn English-like token distributions and produce short natural-language fragments. It is not yet a usable general LLM. Current weaknesses include instruction following, exact factual answering, long-range coherence, multilingual generation, and robust concept binding.
+The Stage C prototype can generate longer English text than the earlier v0.1 checkpoint, and graph ablations show that typed graph edges materially affect generation. It is still not a usable general LLM. Current weaknesses include exact factual answering, stable long-range coherence, robust instruction following, strong grammar, multilingual generation, and reliable concept binding.
 
-The strongest current behavior is short story-style continuation. The weakest behavior is precise QA, numeric/factual answers, structured lists, and abstract definitions.
+The strongest current behavior is story-style continuation. The weakest behavior is precise QA, numeric/factual answers, structured lists, and abstract definitions.
 
-## Released Checkpoint
+## Released Checkpoints
 
-The current prototype checkpoint is published separately from the source tree:
+The current Stage C checkpoint is published separately from the source tree:
 
-[![Download Model Package](https://img.shields.io/badge/Download-model_package.zip-2ea44f)](https://github.com/reshuibuduo/TMCRA-TokenGraph-LLM/releases/download/v0.1.0-prototype/token_graph_llm_model_package_20260530.zip)
+[![Download Stage C Package](https://img.shields.io/badge/Download-stagec_model_package.zip-2ea44f)](https://github.com/reshuibuduo/TMCRA-TokenGraph-LLM/releases/download/v0.2.0-stagec/tgclm_stagec_model_package_20260606.zip)
 [![Hugging Face Model](https://img.shields.io/badge/View_on-Hugging_Face-yellow?logo=huggingface)](https://huggingface.co/2009YU/TMCRA-TokenGraph-LLM)
 
-The source repository intentionally excludes `.pt` checkpoints and raw corpora. The release package includes the checkpoint, tokenizer, model card, manifest, checksums, and example outputs.
+The source repository intentionally excludes `.pt` checkpoints and raw corpora. The release package includes the checkpoint, tokenizer, dataset manifest, training summary, checksum, and evaluation notes.
 
-## Current Training Scale And Examples
+Previous release:
 
-The released checkpoint continues from a base model trained on a token-graph dataset with:
+- `v0.1.0-prototype` is now treated as the legacy small prototype checkpoint package.
 
-- train samples: `920,048`
-- validation samples: `80,004`
-- vocabulary size: `1,012`
-- model shape: `dim=384`, `graph_layers=6`, `decoder_layers=8`, untied output embedding
-- finetuning: `3,000` additional steps with relation-transition and causal-path objectives
+## Current Stage C Training Scale
 
-Observed capability is still early-stage. It can generate short English fragments, especially story-like continuations, but it is not a reliable factual QA model.
+The Stage C checkpoint was trained with:
 
-Example greedy output:
+- parameters: `114,615,372`
+- model shape: `dim=512`, `graph_layers=8`, `decoder_layers=10`
+- embeddings: untied
+- precision: `bf16`
+- effective training samples: about `1.03M`
+- training steps: `62,000`
+- checkpoint: `token_graph_dynamic_decoder_v3.pt`
+- tokenizer: packaged with the Stage C dataset manifest
 
-```text
-Prompt:
-Continue the story in natural language.
+Observed capability is still early-stage. It can generate story-like English continuations and shows measurable graph-edge dependence, but it is not a reliable factual QA model.
 
-Output:
-to her mom. "Mom, can I have some oats?" she asked. Her mom said,
-"Yes, but be careful. That is very yummy!" Mia was so excited to eat
-the oats that she wanted to show her friends.
-```
+## Current Smoke Evaluation
 
-Weak-case example:
+Stage A/B/C loss and graph ablation smoke:
 
-```text
-Prompt:
-How deep was the water that rushed through the school?
+| model | variant | total loss | lm loss |
+|---|---|---:|---:|
+| StageA | normal | 10.666509 | 7.587883 |
+| StageB | normal | 10.228030 | 7.297534 |
+| StageC | normal | 6.512117 | 4.641285 |
+| StageC | no_edges | 8.310654 | 5.790666 |
+| StageC | shuffle_edges | 7.702783 | 5.169387 |
 
-Output:
-feetings.com food.
-```
+TinyStories validation smoke:
 
-This boundary is intentional in the release notes: the package is meant to expose the graph-native language-model architecture, training path, and attribution tools, not to claim mature LLM performance.
+| variant | avg words | avg gold overlap |
+|---|---:|---:|
+| normal | 73.88 | 0.1835 |
+| no_edges | 38.12 | 0.1499 |
+| shuffle_edges | 63.62 | 0.1618 |
+
+BLiMP likelihood smoke:
+
+| task | accuracy |
+|---|---:|
+| determiner_noun_agreement_1 | 59% |
+| anaphor_number_agreement | 63% |
+| regular_plural_subject_verb_agreement_1 | 64% |
+
+These numbers are smoke tests, not leaderboard claims. They show early language behavior and graph-edge dependence, while also showing that Stage C is not yet a mature LLM.
 
 ## Repository Layout
 
@@ -80,6 +96,12 @@ src/token_graph_llm/
   native_token_graph_common.py       tokenizer utilities
   token_graph_llm_model_v1.py        graph encoder + graph causal decoder + losses
   train_token_graph_llm_v1.py        training / finetuning entry point
+  model_token_graph_dynamic_decoder_v3.py
+  train_token_graph_dynamic_decoder_v3.py
+  train_graph_causal_decoder_v2.py
+  eval_dynamic_v3_compare_ablation.py
+  eval_stagec_tinystories_smoke_v3.py
+  eval_stagec_blimp_likelihood_v3.py
   generalization_eval_probe_v1.py    anti-copy / generalization probe
   token_attribution_v1.py            token-level graph attribution
 
@@ -93,6 +115,10 @@ examples/
   generalization_probe_prompts.jsonl
 
 docs/
+  TGCLM_STAGEC_TECHNICAL_OVERVIEW.md
+  TGCLM_STAGEC_TECHNICAL_OVERVIEW_ZH.md
+  STAGEC_DETAILED_BENCHMARK_SMOKE_20260606.md
+  TOKEN_LEVEL_SEMANTIC_GRAPH_SCHEMA.md
   ARCHITECTURE_RUNTIME_ZH.md
   OPEN_CORPUS_10M_CANDIDATES.md
 
@@ -156,52 +182,50 @@ manifest.json
 
 For larger corpora, use the parallel/resume-spill builders in `scripts/`.
 
-## Train
+## Train Stage C Style
 
 Run from `src/token_graph_llm`:
 
 ```bash
 cd src/token_graph_llm
-python train_token_graph_llm_v1.py \
+python train_token_graph_dynamic_decoder_v3.py \
   --dataset-dir /path/to/dataset_out \
   --out-dir /path/to/run_out \
   --streaming-train \
-  --max-steps 3000 \
+  --max-steps 62000 \
   --batch-size 4 \
   --grad-accum-steps 4 \
-  --dim 384 \
-  --graph-layers 6 \
-  --decoder-layers 8 \
+  --dim 512 \
+  --graph-layers 8 \
+  --decoder-layers 10 \
   --untie-embeddings \
-  --lr 0.000025 \
+  --amp bf16 \
+  --lr 0.0002 \
   --label-smoothing 0.02 \
-  --token-path-weight 0.02 \
-  --transition-path-weight 0.02 \
-  --relation-transition-weight 0.015 \
-  --causal-path-weight 0.003 \
-  --non-eos-weight 0.02 \
-  --non-eos-steps 8
+  --graph-state-weight 0.35 \
+  --next-token-node-weight 0.08 \
+  --edge-type-weight 0.05
 ```
 
 The run directory will contain:
 
 ```text
-token_graph_llm_v1.pt
+token_graph_dynamic_decoder_v3.pt
 summary.json
 ```
 
 ## Continue From A Checkpoint
 
 ```bash
-python train_token_graph_llm_v1.py \
+python train_token_graph_dynamic_decoder_v3.py \
   --dataset-dir /path/to/dataset_out \
   --out-dir /path/to/finetune_out \
-  --init-checkpoint /path/to/token_graph_llm_v1.pt \
+  --init-checkpoint /path/to/token_graph_dynamic_decoder_v3.pt \
   --streaming-train \
   --max-steps 1000 \
-  --dim 384 \
-  --graph-layers 6 \
-  --decoder-layers 8 \
+  --dim 512 \
+  --graph-layers 8 \
+  --decoder-layers 10 \
   --untie-embeddings
 ```
 

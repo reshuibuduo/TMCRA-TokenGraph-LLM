@@ -12,6 +12,7 @@ runs/
 outputs/
 open_corpus/
 hf_cache*/
+release_assets/
 *.log
 *.pid
 

@@ -1,87 +1,116 @@
 # TMCRA TokenGraph-LLM
 
 [![GitHub Repo](https://img.shields.io/badge/GitHub-source-181717?logo=github)](https://github.com/reshuibuduo/TMCRA-TokenGraph-LLM)
-[![Model Release](https://img.shields.io/badge/GitHub-Release-blue?logo=github)](https://github.com/reshuibuduo/TMCRA-TokenGraph-LLM/releases/tag/v0.1.0-prototype)
+[![Stage C Release](https://img.shields.io/badge/GitHub-Stage_C_Release-blue?logo=github)](https://github.com/reshuibuduo/TMCRA-TokenGraph-LLM/releases/tag/v0.2.0-stagec)
 [![Hugging Face](https://img.shields.io/badge/Hugging%20Face-model-yellow?logo=huggingface)](https://huggingface.co/2009YU/TMCRA-TokenGraph-LLM)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-TMCRA TokenGraph-LLM 是一个实验性的图原生自回归语言模型原型。它不是 Transformer 外壳，也不会在推理时调用外部 LLM。文本生成来自 token 级图编码、图消息传递和图结构因果解码器。
+TMCRA TokenGraph-LLM 是一个实验性的图原生自回归语言模型。它不是 Transformer 外壳，也不会在推理时调用外部 LLM。文本生成来自 token 级图编码、学习式边门控、图消息传递和动态图因果解码器。
 
-这个仓库是用于开源审阅的研究原型包。它展示了 token 级图模型可以通过 next-token prediction 和图路径目标进行训练，并且可以对每个生成 token 做 graph node / edge attribution。它不是成熟 SDK，也不是生产可用 LLM。
+当前默认路线是 **Stage C / Dynamic Token Graph Decoder V3**。Stage C 约 `114.6M` 参数，在百万级 token graph 语料上训练，联合使用 next-token、graph-state、tunnel、edge-type 和 next-token-node 目标。它仍然是研究原型，不是成熟 SDK，也不是生产可用 LLM。
 
 ## 项目作用
 
-- 将文本或指令语料构造成 token-level graph。
-- 训练不依赖 Transformer self-attention 的图原生自回归解码器。
-- 以 next-token prediction 作为主训练目标。
-- 增加可选图结构目标：
-  - token path alignment
-  - token transition path consistency
-  - relation transition loss
-  - causal path consistency loss
-  - 非 EOS 正则，用来缓解过早停止和短答塌缩
-- 提供 token attribution：生成 token -> top graph nodes -> incident graph edges。
+- 把文本和指令式语料构造成 token-level graph。
+- 训练不依赖 Transformer self-attention 的图原生自回归 decoder。
+- 让生成 token 本身也成为动态图节点。
+- 学习 typed candidate edges 的边激活，而不是把图边当固定规则。
+- 保持 next-token prediction 为主目标。
+- 增加图结构训练目标：
+  - graph-state token prediction
+  - support-node scoring
+  - answer-overlap scoring
+  - decoder-to-context tunnel alignment
+  - next-token-to-node alignment
+  - edge-type prediction
+- 提供 token attribution：generated token -> top graph nodes -> incident graph edges。
 
 ## 当前状态
 
-当前原型可以学习英文 token 分布，并生成短自然语言片段，但还不是可用的通用 LLM。主要短板包括指令跟随、精确事实回答、长程一致性、多语言生成和概念绑定。
+Stage C 比旧 v0.1 checkpoint 能生成更长的英文文本。图消融显示 typed graph edges 会实质影响生成结果，不是装饰性结构。
 
-目前相对较好的能力是短故事续写。较弱的是精确问答、数字/事实回答、结构化列表和抽象定义。
+当前仍不是可用通用 LLM。主要短板包括：
+
+- 精确事实问答；
+- 稳定长程一致性；
+- 强指令跟随；
+- 强语法能力；
+- 多语言生成；
+- 可靠概念绑定。
+
+目前相对最好的行为是故事类续写；较弱的是精确 QA、数值/事实回答、结构化列表和抽象定义。
 
 ## 已发布模型
 
-当前 checkpoint 与源码分开发布：
+当前 Stage C checkpoint 与源码分开发布：
 
-[![下载模型包](https://img.shields.io/badge/Download-model_package.zip-2ea44f)](https://github.com/reshuibuduo/TMCRA-TokenGraph-LLM/releases/download/v0.1.0-prototype/token_graph_llm_model_package_20260530.zip)
+[![下载 Stage C 模型包](https://img.shields.io/badge/Download-stagec_model_package.zip-2ea44f)](https://github.com/reshuibuduo/TMCRA-TokenGraph-LLM/releases/download/v0.2.0-stagec/tgclm_stagec_model_package_20260606.zip)
 [![Hugging Face 模型页](https://img.shields.io/badge/View_on-Hugging_Face-yellow?logo=huggingface)](https://huggingface.co/2009YU/TMCRA-TokenGraph-LLM)
 
-源码仓库默认不包含 `.pt` checkpoint 和原始训练语料。Release 模型包包含 checkpoint、tokenizer、model card、manifest、checksum 和样例输出。
+源码仓库默认不包含 `.pt` checkpoint 和原始训练语料。Release 模型包包含 checkpoint、tokenizer、dataset manifest、training summary、checksum 和评估说明。
 
-## 当前训练规模和样例
+旧版本：
 
-已发布 checkpoint 基于 token-graph 数据集训练：
+- `v0.1.0-prototype` 现在标记为 legacy small prototype checkpoint package。
 
-- 训练样本：`920,048`
-- 验证样本：`80,004`
-- 词表大小：`1,012`
-- 模型结构：`dim=384`，`graph_layers=6`，`decoder_layers=8`，untied output embedding
-- 微调：额外 `3,000` steps，加入 relation-transition 和 causal-path 目标
+## Stage C 训练规模
 
-当前能力仍处在早期阶段。模型可以生成短英文片段，尤其是故事续写类文本，但还不是可靠的事实问答模型。
+Stage C checkpoint 训练配置：
 
-贪心解码样例：
+- 参数量：`114,615,372`
+- 模型结构：`dim=512`，`graph_layers=8`，`decoder_layers=10`
+- embedding：untied
+- 精度：`bf16`
+- 有效训练样本：约 `1.03M`
+- 训练步数：`62,000`
+- checkpoint：`token_graph_dynamic_decoder_v3.pt`
+- tokenizer：随 Stage C dataset manifest 一起打包
 
-```text
-Prompt:
-Continue the story in natural language.
+## 当前 Smoke 测试
 
-Output:
-to her mom. "Mom, can I have some oats?" she asked. Her mom said,
-"Yes, but be careful. That is very yummy!" Mia was so excited to eat
-the oats that she wanted to show her friends.
-```
+Stage A/B/C loss 与图消融：
 
-弱项样例：
+| model | variant | total loss | lm loss |
+|---|---|---:|---:|
+| StageA | normal | 10.666509 | 7.587883 |
+| StageB | normal | 10.228030 | 7.297534 |
+| StageC | normal | 6.512117 | 4.641285 |
+| StageC | no_edges | 8.310654 | 5.790666 |
+| StageC | shuffle_edges | 7.702783 | 5.169387 |
 
-```text
-Prompt:
-How deep was the water that rushed through the school?
+TinyStories validation smoke：
 
-Output:
-feetings.com food.
-```
+| variant | avg words | avg gold overlap |
+|---|---:|---:|
+| normal | 73.88 | 0.1835 |
+| no_edges | 38.12 | 0.1499 |
+| shuffle_edges | 63.62 | 0.1618 |
 
-这个能力边界是刻意写清楚的：本包主要展示图原生语言模型架构、训练路径和归因工具，不宣称已经达到成熟 LLM 水平。
+BLiMP likelihood smoke：
+
+| task | accuracy |
+|---|---:|
+| determiner_noun_agreement_1 | 59% |
+| anaphor_number_agreement | 63% |
+| regular_plural_subject_verb_agreement_1 | 64% |
+
+这些只是 smoke 测试，不是榜单分数。它们说明 Stage C 已经有早期语言行为和图边依赖，同时也说明它还不是成熟 LLM。
 
 ## 目录结构
 
 ```text
 src/token_graph_llm/
-  native_token_graph_common.py       tokenizer 工具
-  token_graph_llm_model_v1.py        图编码器、图因果解码器、训练 loss
-  train_token_graph_llm_v1.py        训练和微调入口
-  generalization_eval_probe_v1.py    泛化/反复制测试
-  token_attribution_v1.py            token 级图归因可视化
+  native_token_graph_common.py
+  token_graph_llm_model_v1.py              legacy v0.1 model
+  train_token_graph_llm_v1.py              legacy v0.1 trainer
+  model_token_graph_dynamic_decoder_v3.py  Stage C model
+  train_token_graph_dynamic_decoder_v3.py  Stage C trainer
+  train_graph_causal_decoder_v2.py         dataset / collate helpers
+  eval_dynamic_v3_compare_ablation.py
+  eval_stagec_tinystories_smoke_v3.py
+  eval_stagec_blimp_likelihood_v3.py
+  generalization_eval_probe_v1.py
+  token_attribution_v1.py
 
 scripts/
   build_native_token_reasoning_graph_dataset_v3.py
@@ -89,10 +118,11 @@ scripts/
   build_native_token_reasoning_graph_dataset_v3_resume_spill.py
   download_hf_sources.py
 
-examples/
-  generalization_probe_prompts.jsonl
-
 docs/
+  TGCLM_STAGEC_TECHNICAL_OVERVIEW.md
+  TGCLM_STAGEC_TECHNICAL_OVERVIEW_ZH.md
+  STAGEC_DETAILED_BENCHMARK_SMOKE_20260606.md
+  TOKEN_LEVEL_SEMANTIC_GRAPH_SCHEMA.md
   ARCHITECTURE_RUNTIME_ZH.md
   OPEN_CORPUS_10M_CANDIDATES.md
 
@@ -117,8 +147,12 @@ GPU 训练需要安装与你的 CUDA 环境匹配的 PyTorch。
 ```json
 {
   "query": "instruction or prompt",
-  "source_segments": ["optional supporting text"],
-  "text_units": ["optional unit-level text spans"],
+  "source_segments": [
+    {"segment_id": "seg1", "text": "optional supporting text"}
+  ],
+  "text_units": [
+    {"unit_id": "u1", "text": "optional unit-level text spans"}
+  ],
   "target_text": "text to train the decoder to generate"
 }
 ```
@@ -142,7 +176,7 @@ python build_native_token_reasoning_graph_dataset_v3.py \
   --tokenizer-char-budget 250000
 ```
 
-输出：
+预期输出：
 
 ```text
 tokenizer.json
@@ -152,83 +186,70 @@ annotation_input.jsonl
 manifest.json
 ```
 
-大规模语料可以使用 `scripts/` 下的 parallel/resume-spill builder。
+大规模语料可使用 `scripts/` 下的 parallel / resume-spill builder。
 
-## 训练
+## Stage C 风格训练
 
 在 `src/token_graph_llm` 目录运行：
 
 ```bash
 cd src/token_graph_llm
-python train_token_graph_llm_v1.py \
+python train_token_graph_dynamic_decoder_v3.py \
   --dataset-dir /path/to/dataset_out \
   --out-dir /path/to/run_out \
   --streaming-train \
-  --max-steps 3000 \
+  --max-steps 62000 \
   --batch-size 4 \
   --grad-accum-steps 4 \
-  --dim 384 \
-  --graph-layers 6 \
-  --decoder-layers 8 \
+  --dim 512 \
+  --graph-layers 8 \
+  --decoder-layers 10 \
   --untie-embeddings \
-  --lr 0.000025 \
+  --amp bf16 \
+  --lr 0.0002 \
   --label-smoothing 0.02 \
-  --token-path-weight 0.02 \
-  --transition-path-weight 0.02 \
-  --relation-transition-weight 0.015 \
-  --causal-path-weight 0.003 \
-  --non-eos-weight 0.02 \
-  --non-eos-steps 8
+  --graph-state-weight 0.35 \
+  --next-token-node-weight 0.08 \
+  --edge-type-weight 0.05
 ```
 
 训练输出：
 
 ```text
-token_graph_llm_v1.pt
+token_graph_dynamic_decoder_v3.pt
 summary.json
 ```
 
 ## 从 checkpoint 继续训练
 
 ```bash
-python train_token_graph_llm_v1.py \
+python train_token_graph_dynamic_decoder_v3.py \
   --dataset-dir /path/to/dataset_out \
   --out-dir /path/to/finetune_out \
-  --init-checkpoint /path/to/token_graph_llm_v1.pt \
+  --init-checkpoint /path/to/token_graph_dynamic_decoder_v3.pt \
   --streaming-train \
   --max-steps 1000 \
-  --dim 384 \
-  --graph-layers 6 \
-  --decoder-layers 8 \
+  --dim 512 \
+  --graph-layers 8 \
+  --decoder-layers 10 \
   --untie-embeddings
 ```
 
 继续训练时，模型结构参数必须和 checkpoint 匹配。
 
-## 泛化测试
-
-```bash
-python generalization_eval_probe_v1.py \
-  --run-dir /path/to/run_out \
-  --dataset-dir /path/to/dataset_out \
-  --prompts-jsonl ../../examples/generalization_probe_prompts.jsonl \
-  --out-json /path/to/run_out/generalization_probe_v1.json \
-  --train-neighbor-scan 10000
-```
-
-该测试会输出 nearest train similarity、copy ratio、new-token ratio 和 repetition ratio，用于判断模型是否只是在复制训练样本。
-
 ## Token Attribution
 
+Stage C 后续建议使用 v3 评估脚本：
+
 ```bash
-python token_attribution_v1.py \
-  --run-dir /path/to/run_out \
+python eval_dynamic_v3_compare_ablation.py \
   --dataset-dir /path/to/dataset_out \
-  --out-json /path/to/run_out/token_attribution_v1.json \
-  --out-html /path/to/run_out/token_attribution_v1.html
+  --checkpoints-json /path/to/checkpoints.json \
+  --out-json /path/to/eval_results.json \
+  --out-html /path/to/attribution.html
 ```
 
-HTML 会展示每个生成 token 对应的 top graph nodes 和 incident edges。
+HTML 会展示每个 generated token 对应的 top graph nodes 和候选 next tokens。
 
 ## 模型文件
 
@@ -236,7 +257,7 @@ HTML 会展示每个生成 token 对应的 top graph nodes 和 incident edges。
 
 ## 安全和隐私
 
-本包只应包含源码、文档和小型示例。正式发布前需要做本地 secret scan，确认没有密钥、内部主机名、私有日志或原始训练数据 dump。
+本包只应包含源码、文档和小型示例。正式发布前需要确认没有密钥、内部主机名、私有日志或原始训练数据 dump。
 
 ## 许可证
 
